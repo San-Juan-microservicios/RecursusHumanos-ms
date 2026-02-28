@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Permisos" ADD COLUMN     "estadoPermiso" TEXT NOT NULL DEFAULT 'CURSANDO',
+ADD COLUMN     "isActive" BOOLEAN NOT NULL DEFAULT true;

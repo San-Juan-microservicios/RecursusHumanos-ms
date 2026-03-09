@@ -3,13 +3,14 @@ import { EmpleadosModule } from './empleados/empleados.module';
 import { PermisosModule } from './permisos/permisos.module';
 import { TiposModule } from './tipos/tipos.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AsistenciaModule } from './asistencia/asistencia.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     EmpleadosModule, 
     PermisosModule, 
-    TiposModule
+    TiposModule, AsistenciaModule
   ],
   controllers: [],
   providers: [],

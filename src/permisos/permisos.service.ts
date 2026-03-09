@@ -5,8 +5,6 @@ import { PrismaClient } from "../../generated/prisma";
 import { RpcException } from '@nestjs/microservices';
 
 import { FilterPermisosDto } from './dto/filtro-permiso.dto';
-import { UpdatePermisoDto } from './dto/update-permiso.dto';
-import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class PermisosService extends PrismaClient implements OnModuleInit{

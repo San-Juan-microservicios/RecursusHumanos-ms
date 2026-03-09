@@ -11,9 +11,21 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = env("DATABASE_URL")
 }
 
+enum EstadoAsistencia {
+  PRESENTE
+  AUSENTE
+  TARDANZA
+  PERMISO
+  FERIADO
+}
+
+enum EstadoPlanilla {
+  BORRADOR
+  CERRADA
+}
 
 model Tipo {
   id          Int      @id @default(autoincrement())
@@ -38,6 +50,9 @@ model Empleado {
   fechaIngreso DateTime
   isActive     Boolean   @default(true)
   permisos     Permisos[] // Relación 1:N con Permiso
+
+    asistencias  Asistencia[]       // 👈 agregar esta línea
+    detalles     DetallePlanilla[]  // 👈 agregar esta línea
 }
 
 model Permisos {
@@ -53,3 +68,45 @@ model Permisos {
   empleado    Empleado  @relation(fields: [idEmpleado], references: [id])
 }
 
+model Asistencia {
+  id          Int              @id @default(autoincrement())
+  idEmpleado  Int
+  fecha       DateTime         @db.Date
+  estado      EstadoAsistencia
+  observacion String?
+  creadoEn    DateTime         @default(now())
+
+  empleado    Empleado         @relation(fields: [idEmpleado], references: [id])
+
+  @@unique([idEmpleado, fecha])
+}
+
+model Planilla {
+  id        Int              @id @default(autoincrement())
+  mes       Int              // 1–12
+  anio      Int
+  estado    EstadoPlanilla   @default(BORRADOR)
+  creadoEn  DateTime         @default(now())
+  cerradoEn DateTime?
+
+  detalles  DetallePlanilla[]
+
+  @@unique([mes, anio])
+}
+
+model DetallePlanilla {
+  id             Int      @id @default(autoincrement())
+  idPlanilla     Int
+  idEmpleado     Int
+  salarioBase    Float
+  diasTrabajados Int
+  diasAusente    Int
+  descuentos     Float
+  totalAPagar    Float
+  observacion    String?
+
+  planilla       Planilla @relation(fields: [idPlanilla], references: [id])
+  empleado       Empleado @relation(fields: [idEmpleado], references: [id])
+
+  @@unique([idPlanilla, idEmpleado])
+}

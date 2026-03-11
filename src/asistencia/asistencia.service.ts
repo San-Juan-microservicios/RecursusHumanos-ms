@@ -15,6 +15,8 @@ export class AsistenciaService extends PrismaClient implements OnModuleInit {
     const {idEmpleado,observacion,estado} = createAsistenciaDto;
     const fecha = new Date();
     fecha.setHours(0,0,0,0);
+    const inicioDia = new Date(fecha.setHours(0, 0, 0, 0));
+    const finDia    = new Date(fecha.setHours(23, 59, 59, 999));
 
     const empleado = await this.empleado.findUnique({
       where: {
@@ -28,12 +30,10 @@ export class AsistenciaService extends PrismaClient implements OnModuleInit {
         message: `Empleado con id ${idEmpleado} no encontrado o inactivo`
       });
     }
-    const registroExistente = await this.asistencia.findUnique({
+    const registroExistente = await this.asistencia.findFirst({
       where:{
-        idEmpleado_fecha:{
-          idEmpleado,
-          fecha: fecha
-        }
+        idEmpleado: createAsistenciaDto.idEmpleado,
+        fecha:{gte: inicioDia, lt: finDia}
       }
     });
     if(registroExistente){

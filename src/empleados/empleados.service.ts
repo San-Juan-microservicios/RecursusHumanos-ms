@@ -52,6 +52,13 @@ export class EmpleadosService extends PrismaClient implements OnModuleInit{
       })
     }
 
+    if(createEmpleadoDto.rol === 'ADMIN'){
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: `No se puede asignar el rol ADMIN a un empleado`
+      });
+    }
+
     const empleado = await this.empleado.create({
       data: {
         nombre: createEmpleadoDto.nombre,
@@ -176,6 +183,12 @@ export class EmpleadosService extends PrismaClient implements OnModuleInit{
 
     await this.findOne(id);
     const {id:__,nombre,apellido,ci,password,rol,sueldo,fechaIngreso,tipoId} = updateEmpleadoDto;
+    if(rol === 'ADMIN'){
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: `No se puede asignar el rol ADMIN a un empleado`
+      });
+    }
 
     const empleado = await this.empleado.update({
       where: {id:id,isActive:true},

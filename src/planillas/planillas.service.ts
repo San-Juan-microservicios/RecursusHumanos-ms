@@ -16,6 +16,18 @@ export class PlanillasService extends PrismaClient implements OnModuleInit{
   async create(dto: CreatePlanillaDto) {
     const { mes, anio } = dto;
 
+    // 1. Validar que no sea un mes anterior al actual
+    const fechaActual = new Date();
+    const mesActual = fechaActual.getMonth() + 1; // getMonth() retorna 0-11
+    const anioActual = fechaActual.getFullYear();
+    
+    if (anio < anioActual || (anio === anioActual && mes < mesActual)) {
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: `No se puede crear una planilla de meses anteriores. Mes/Año actual: ${mesActual}/${anioActual}`
+      });
+    }
+
     // 1. Verificar que no exista ya una planilla para ese mes/año
     const existe = await this.planilla.findUnique({
       where: { mes_anio: { mes, anio } }
@@ -90,6 +102,8 @@ export class PlanillasService extends PrismaClient implements OnModuleInit{
               ? `Tardanzas: ${diasTardanza} día(s) (-${diasTardanza * DESCUENTO_TARDANZA} Bs)`
               : null;
 
+        
+        
         return this.detallePlanilla.create({
           data: {
             idPlanilla:     planilla.id,

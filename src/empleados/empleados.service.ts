@@ -183,7 +183,7 @@ export class EmpleadosService extends PrismaClient implements OnModuleInit{
         nombre,
         apellido,
         ci,
-        password: bcrypt.hashSync(password, 10),
+        ...(password && {password: bcrypt.hashSync(password,10)}),
         rol,
         sueldo,
         fechaIngreso: new Date(fechaIngreso),

@@ -34,4 +34,10 @@ export class PlanillasController {
   cerrar(@Payload('id') id: number) {
     return this.planillasService.cerrar(id);
   }
+
+  @MessagePattern('get_planilla_report')
+  async getPlanillaReport(@Payload() filtros?: any) {
+    return this.planillasService.getPlanillaParaReporte(filtros);
+  }
+
 }

@@ -25,23 +25,15 @@ export class AsistenciaController {
     return this.asistenciaService.findOne(id);
   }
 
-  // @MessagePattern('findAsistenciaByEmpleado')
-  // findByEmpleado(@Payload('idEmpleado') idEmpleado: number) {
-  //   return this.asistenciaService.findByEmpleado(idEmpleado);
-  // }
-
-  // @MessagePattern('reporteMensualAsistencia')
-  // reporteMensual(@Payload() filtroAsistenciaDto: FiltroAsistenciaDto) {
-  //   return this.asistenciaService.reporteMensual(filtroAsistenciaDto);
-  // }
 
   @MessagePattern('updateAsistencia')
   update(@Payload() updateAsistenciaDto: UpdateAsistenciaDto) {
     return this.asistenciaService.update(updateAsistenciaDto.id, updateAsistenciaDto);
   }
 
-  // @MessagePattern('removeAsistencia')
-  // remove(@Payload('id') id: number) {
-  //   return this.asistenciaService.remove(id);
-  // }
+  @MessagePattern('get_asistencia_report')
+  async getAsistenciaReport(@Payload() filtros?: any) {
+    return this.asistenciaService.getAsistenciaParaReporte(filtros);
+  }
+
 }

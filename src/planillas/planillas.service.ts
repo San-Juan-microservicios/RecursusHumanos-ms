@@ -281,4 +281,130 @@ export class PlanillasService extends PrismaClient implements OnModuleInit{
     }
   });
   }
+
+
+  async getPlanillaParaReporte(filtros?: {
+  idPlanilla?: number;
+  mes?: number;
+  anio?: number;
+  estado?: string;
+}) {
+  try {
+
+    // ── Reporte de una planilla específica ──────────────────────────────
+    if (filtros?.idPlanilla) {
+      const planilla = await this.planilla.findUnique({
+        where: { id: filtros.idPlanilla },
+        include: {
+          detalles: {
+            include: {
+              empleado: {
+                select: {
+                  id:       true,
+                  nombre:   true,
+                  apellido: true,
+                  ci:       true,
+                  tipo: { select: { nombre: true } }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!planilla) {
+        throw new RpcException({
+          status: HttpStatus.NOT_FOUND,
+          message: `No existe la planilla con ID ${filtros.idPlanilla}`
+        });
+      }
+
+      const totalDescuentos = planilla.detalles.reduce((sum, d) => sum + d.descuentos,  0);
+      const totalAPagar     = planilla.detalles.reduce((sum, d) => sum + d.totalAPagar, 0);
+
+      return {
+        planilla: {
+          id:        planilla.id,
+          mes:       planilla.mes,
+          anio:      planilla.anio,
+          estado:    planilla.estado,
+          creadoEn:  planilla.creadoEn,
+          cerradoEn: planilla.cerradoEn,
+        },
+        detalles: planilla.detalles.map(d => ({
+          id:             d.id,
+          salarioBase:    d.salarioBase,
+          diasTrabajados: d.diasTrabajados,
+          diasAusente:    d.diasAusente,
+          descuentos:     d.descuentos,
+          totalAPagar:    d.totalAPagar,
+          observacion:    d.observacion || '',
+          empleado: {
+            id:       d.empleado.id,
+            nombre:   d.empleado.nombre,
+            apellido: d.empleado.apellido,
+            ci:       d.empleado.ci,
+            tipo:     d.empleado.tipo?.nombre || '—'
+          }
+        })),
+        estadisticas: {
+          totalEmpleados:  planilla.detalles.length,
+          totalDescuentos: parseFloat(totalDescuentos.toFixed(2)),
+          totalAPagar:     parseFloat(totalAPagar.toFixed(2)),
+          fechaGeneracion: new Date()
+        }
+      };
+    }
+
+    // ── Reporte de todas las planillas ──────────────────────────────────
+    const where: any = {};
+    if (filtros?.mes)    where.mes    = filtros.mes;
+    if (filtros?.anio)   where.anio   = filtros.anio;
+    if (filtros?.estado) where.estado = filtros.estado;
+
+    const planillas = await this.planilla.findMany({
+      where,
+      orderBy: [{ anio: 'desc' }, { mes: 'desc' }],
+      include: {
+        detalles: {
+          select: {
+            totalAPagar: true,
+            descuentos:  true,
+          }
+        }
+      }
+    });
+
+    const planillasConTotales = planillas.map(p => ({
+      id:              p.id,
+      mes:             p.mes,
+      anio:            p.anio,
+      estado:          p.estado,
+      creadoEn:        p.creadoEn,
+      cerradoEn:       p.cerradoEn,
+      totalEmpleados:  p.detalles.length,
+      totalDescuentos: parseFloat(p.detalles.reduce((sum, d) => sum + d.descuentos,  0).toFixed(2)),
+      totalAPagar:     parseFloat(p.detalles.reduce((sum, d) => sum + d.totalAPagar, 0).toFixed(2)),
+    }));
+
+    const totalDescuentos = planillasConTotales.reduce((sum, p) => sum + p.totalDescuentos, 0);
+    const totalAPagar     = planillasConTotales.reduce((sum, p) => sum + p.totalAPagar,     0);
+
+    return {
+      planillas: planillasConTotales,
+      estadisticas: {
+        totalPlanillas:  planillas.length,
+        totalCerradas:   planillas.filter(p => p.estado === 'CERRADA').length,
+        totalBorrador:   planillas.filter(p => p.estado === 'BORRADOR').length,
+        totalDescuentos: parseFloat(totalDescuentos.toFixed(2)),
+        totalAPagar:     parseFloat(totalAPagar.toFixed(2)),
+        fechaGeneracion: new Date()
+      }
+    };
+
+  } catch (error) {
+    throw error;
+  }
+}
+
 }

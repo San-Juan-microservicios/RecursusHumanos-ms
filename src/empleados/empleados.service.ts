@@ -52,10 +52,14 @@ export class EmpleadosService extends PrismaClient implements OnModuleInit{
       })
     }
 
-    if(createEmpleadoDto.rol === 'ADMIN'){
+    const admonRol = await this.empleado.findFirst({
+      where:{rol:'ADMIN', isActive:true}
+    })
+
+    if(admonRol){
       throw new RpcException({
         status: HttpStatus.BAD_REQUEST,
-        message: `No se puede asignar el rol ADMIN a un empleado`
+        message: `No se puede asignar el rol ADMIN a mas de un empleado`
       });
     }
 
